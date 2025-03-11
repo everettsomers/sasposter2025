@@ -5,13 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Poster Viewer</title>
   <style>
-    /* Style for the responsive canvas container */
+    /* Responsive container for the canvas */
     .canvas-container {
       display: flex;
       justify-content: center;
       padding: 10px;
     }
-    /* The canvas will scale responsively */
     #pdf-canvas {
       max-width: 100%;
       height: auto;
@@ -21,7 +20,7 @@
   <!-- Include PDF.js from a reliable CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script>
-    // Set up the workerSrc using the CDN version
+    // Set up the PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
   </script>
 </head>
@@ -31,21 +30,23 @@
   </div>
 
   <script>
-    // The URL of your PDF file (ensure it's named exactly "SAS_poster.pdf" and in the same folder)
     const url = 'SAS_poster.pdf';
+    // Extra multiplier to increase resolution (try 1.2 or 1.5)
+    const extraScaleFactor = 1.5; 
 
     pdfjsLib.getDocument(url).promise.then(pdf => {
       console.log('PDF loaded.');
       pdf.getPage(1).then(page => {
         console.log('Page 1 loaded.');
-        // Get the viewport at scale 1.
+        // Get initial viewport at scale 1.
         const viewport = page.getViewport({ scale: 1 });
-        // Calculate a scale that fits 95% of the document body width.
+        // Calculate a base scale to fit 95% of the body width.
         const desiredWidth = document.body.clientWidth * 0.95;
-        const scale = desiredWidth / viewport.width;
+        const baseScale = desiredWidth / viewport.width;
+        // Multiply base scale by extraScaleFactor to increase resolution.
+        const scale = baseScale * extraScaleFactor;
         const scaledViewport = page.getViewport({ scale: scale });
 
-        // Get the canvas element and its context.
         const canvas = document.getElementById('pdf-canvas');
         const context = canvas.getContext('2d');
 
@@ -53,13 +54,10 @@
         const devicePixelRatio = window.devicePixelRatio || 1;
         canvas.width = scaledViewport.width * devicePixelRatio;
         canvas.height = scaledViewport.height * devicePixelRatio;
-        // Set CSS dimensions to keep the layout the same.
         canvas.style.width = scaledViewport.width + 'px';
         canvas.style.height = scaledViewport.height + 'px';
-        // Scale the context to ensure crisp rendering.
         context.scale(devicePixelRatio, devicePixelRatio);
 
-        // Render the PDF page into the canvas context.
         const renderContext = {
           canvasContext: context,
           viewport: scaledViewport
@@ -69,7 +67,7 @@
         });
       });
     }).catch(error => {
-      console.error('Error loading PDF: ' + error);
+      console.error('Error loading PDF:', error);
     });
   </script>
 </body>
