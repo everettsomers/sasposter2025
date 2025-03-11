@@ -34,10 +34,8 @@
     // The URL of your PDF file (ensure it's named exactly "SAS_poster.pdf" and in the same folder)
     const url = 'SAS_poster.pdf';
 
-    // Asynchronously load the PDF.
     pdfjsLib.getDocument(url).promise.then(pdf => {
       console.log('PDF loaded.');
-      // Fetch the first page.
       pdf.getPage(1).then(page => {
         console.log('Page 1 loaded.');
         // Get the viewport at scale 1.
@@ -47,11 +45,19 @@
         const scale = desiredWidth / viewport.width;
         const scaledViewport = page.getViewport({ scale: scale });
 
-        // Get the canvas element and set its dimensions.
+        // Get the canvas element and its context.
         const canvas = document.getElementById('pdf-canvas');
         const context = canvas.getContext('2d');
-        canvas.width = scaledViewport.width;
-        canvas.height = scaledViewport.height;
+
+        // Improve clarity by accounting for device pixel ratio.
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        canvas.width = scaledViewport.width * devicePixelRatio;
+        canvas.height = scaledViewport.height * devicePixelRatio;
+        // Set CSS dimensions to keep the layout the same.
+        canvas.style.width = scaledViewport.width + 'px';
+        canvas.style.height = scaledViewport.height + 'px';
+        // Scale the context to ensure crisp rendering.
+        context.scale(devicePixelRatio, devicePixelRatio);
 
         // Render the PDF page into the canvas context.
         const renderContext = {
